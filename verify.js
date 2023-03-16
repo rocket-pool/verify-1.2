@@ -36,7 +36,7 @@ const provider = new ethers.providers.JsonRpcProvider(process.env.ETH_RPC, proce
 let upgradeAddress, etherscanApiUrl
 switch (process.env.NETWORK) {
   case 'goerli':
-    upgradeAddress = '0x05334159d5807dD88F6F5219677E140340f056C7'
+    upgradeAddress = '0xd44eaF798A92DEBeBE44921D4C3E7d10E591ae85'
     etherscanApiUrl = 'https://api-goerli.etherscan.io'
     break
   case 'mainnet':
@@ -112,6 +112,11 @@ async function verifyTruffleArtifact (contractName, address) {
       } else {
         // Construct the expected source by adding the preamble to the source file from the git repo
         expectedSource = preamble + fs.readFileSync(`rocketpool/${path}`).toString()
+      }
+
+      // Incorrect source for RocketUpgradeOneDotTwo.sol was included as a source for all contracts during Goerli verification but the diff is inconsequential
+      if (process.env.NETWORK === 'goerli' && (path === 'contracts/contract/upgrade/RocketUpgradeOneDotTwo.sol' && contractName !== 'RocketUpgradeOneDotTwo')){
+        continue;
       }
 
       const actualSource = source.sources[path].content
