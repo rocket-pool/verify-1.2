@@ -25,6 +25,7 @@ const contractMap = {
   newRocketDAONodeTrustedSettingsMinipool: 'RocketDAONodeTrustedSettingsMinipool',
   newRocketDAOProtocolSettingsNode: 'RocketDAOProtocolSettingsNode',
   newRocketNetworkBalances: 'RocketNetworkBalances',
+  newRocketRewardsPool: 'RocketRewardsPool',
   rocketMinipoolBase: 'RocketMinipoolBase',
   rocketMinipoolBondReducer: 'RocketMinipoolBondReducer',
 }
@@ -36,11 +37,11 @@ const provider = new ethers.providers.JsonRpcProvider(process.env.ETH_RPC, proce
 let upgradeAddress, etherscanApiUrl
 switch (process.env.NETWORK) {
   case 'goerli':
-    upgradeAddress = '0xd44eaF798A92DEBeBE44921D4C3E7d10E591ae85'
+    upgradeAddress = '0xd3d74b3532f393f381e18f3b0cdacfde23d669a6'
     etherscanApiUrl = 'https://api-goerli.etherscan.io'
     break
   case 'mainnet':
-    upgradeAddress = ''
+    upgradeAddress = '0x9a0b5d3101d111EA0edD573d45ef2208CC97984a'
     etherscanApiUrl = 'https://api.etherscan.io'
     break
   default:
@@ -114,8 +115,19 @@ async function verifyTruffleArtifact (contractName, address) {
         expectedSource = preamble + fs.readFileSync(`rocketpool/${path}`).toString()
       }
 
-      // Incorrect source for RocketUpgradeOneDotTwo.sol was included as a source for all contracts during Goerli verification but the diff is inconsequential
-      if (process.env.NETWORK === 'goerli' && (path === 'contracts/contract/upgrade/RocketUpgradeOneDotTwo.sol' && contractName !== 'RocketUpgradeOneDotTwo')){
+      // Updates were made to some contracts on Goerli after initial verification. They have to be ignored because you cannot reverify
+      // contract on Etherscan after the initial verification
+      if (
+          process.env.NETWORK === 'goerli' &&
+          (
+              (path === 'contracts/contract/upgrade/RocketUpgradeOneDotTwo.sol' && contractName !== 'RocketUpgradeOneDotTwo') ||
+              (path === 'contracts/contract/minipool/RocketMinipoolDelegate.sol' && contractName !== 'RocketMinipoolDelegate') ||
+              (path === 'contracts/contract/minipool/RocketMinipoolManager.sol' && contractName !== 'RocketMinipoolManager') ||
+              (path === 'contracts/interface/minipool/RocketMinipoolInterface.sol') ||
+              (path === 'contracts/interface/minipool/RocketMinipoolManagerInterface.sol') ||
+              (path === 'contracts/contract/rewards/RocketRewardsPool.sol' && contractName !== 'RocketRewardsPool')
+          )
+      ){
         continue;
       }
 
