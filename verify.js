@@ -155,7 +155,7 @@ async function go () {
   await verifyTruffleArtifact('RocketUpgradeOneDotTwo', upgradeAddress)
 
   // Construct ABI and contract instance to call all the view methods on upgrade contract
-  const upgradeAbi = []
+  const upgradeAbi = ['function locked() view returns(bool)']
   for (const method in contractMap) {
     upgradeAbi.push(`function ${method}() view returns (address)`)
   }
@@ -167,8 +167,15 @@ async function go () {
     await verifyTruffleArtifact(contractMap[method], address)
   }
 
-  // If we made it here then it was successful (failures exit early)
-  console.log('✔ Verification successful'.green)
+  const locked = await contract.locked();
+
+  if (!locked) {
+    console.error(`❌ Upgrade contract is not locked`.red)
+    process.exit(1)
+  } else {
+    // If we made it here then it was successful (failures exit early)
+    console.log('✔ Verification successful'.green)
+  }
 }
 
 
